@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>纳斯达克100指数监控</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            padding: 8px;
+            padding-top: max(8px, env(safe-area-inset-top));
+            padding-bottom: max(8px, env(safe-area-inset-bottom));
+            padding-left: max(8px, env(safe-area-inset-left));
+            padding-right: max(8px, env(safe-area-inset-right));
+            background-color: #f5f5f5;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin: 0 0 6px 0;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .index-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 10px;
+            flex: 1;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+            flex-shrink: 0;
+        }
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+            min-width: 0;
+        }
+        .index-card h2 {
+            margin: 0;
+            color: #333;
+            font-size: 15px;
+        }
+        .time-range-selector {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .time-btn {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #666;
+            touch-action: manipulation;
+            min-width: 40px;
+            text-align: center;
+        }
+        .time-btn:active {
+            background-color: #e0e0e0;
+        }
+        .time-btn.active {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        .metrics-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 3px;
+            flex-wrap: wrap;
+        }
+        .metric {
+            display: flex;
+            flex-direction: column;
+            min-width: 65px;
+        }
+        .metric-label {
+            font-size: 11px;
+            color: #888;
+        }
+        .metric-value {
+            font-size: 15px;
+            font-weight: bold;
+        }
+        .metric-value.negative {
+            color: #e53935;
+        }
+        .metric-value.positive {
+            color: #43a047;
+        }
+        .metric-sub {
+            font-size: 10px;
+            color: #999;
+        }
+        .data-info {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.3;
+        }
+        .drawdown-info {
+            font-size: 11px;
+            color: #666;
+            margin-top: 3px;
+            line-height: 1.3;
+        }
+        .refresh-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            touch-action: manipulation;
+            flex-shrink: 0;
+            height: 32px;
+        }
+        .refresh-btn:active {
+            background-color: #388E3C;
+        }
+        .chart-container {
+            flex: 1;
+            position: relative;
+            min-height: 0;
+            touch-action: pan-y;
+        }
+        .chart-svg {
+            width: 100%;
+            height: 100%;
+        }
+        .last-updated {
+            text-align: right;
+            font-size: 11px;
+            color: #999;
+            margin-top: 5px;
+            flex-shrink: 0;
+        }
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s;
+            z-index: 100;
+            max-width: 150px;
+        }
+        .tooltip.visible {
+            opacity: 1;
+        }
+        .tooltip-date {
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        .tooltip-price {
+            color: #81c784;
+        }
+
+        @media screen and (min-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 26px;
+                margin-bottom: 12px;
+            }
+            .index-card {
+                padding: 18px;
+                border-radius: 12px;
+            }
+            .header-row {
+                margin-bottom: 12px;
+            }
+            .header-left {
+                gap: 10px;
+            }
+            .index-card h2 {
+                font-size: 20px;
+            }
+            .time-range-selector {
+                gap: 6px;
+            }
+            .time-btn {
+                padding: 6px 14px;
+                font-size: 14px;
+                min-width: 50px;
+            }
+            .metrics-row {
+                gap: 30px;
+                margin-bottom: 8px;
+            }
+            .metric {
+                min-width: 90px;
+            }
+            .metric-label {
+                font-size: 14px;
+            }
+            .metric-value {
+                font-size: 20px;
+            }
+            .metric-sub {
+                font-size: 13px;
+            }
+            .data-info {
+                font-size: 15px;
+            }
+            .drawdown-info {
+                font-size: 14px;
+                margin-top: 5px;
+            }
+            .refresh-btn {
+                padding: 10px 18px;
+                font-size: 15px;
+                height: 40px;
+            }
+            .last-updated {
+                font-size: 14px;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>纳斯达克100指数监控</h1>
+        
+        <div class="index-card">
+            <div class="header-row">
+                <div class="header-left">
+                    <h2>纳斯达克100指数 (NDX)</h2>
+                    <div class="time-range-selector">
+                        <button class="time-btn active" data-years="1">1年</button>
+                        <button class="time-btn" data-years="3">3年</button>
+                        <button class="time-btn" data-years="5">5年</button>
+                        <button class="time-btn" data-years="10">10年</button>
+                        <button class="time-btn" data-years="15">15年</button>
+                        <button class="time-btn" data-years="20">20年</button>
+                    </div>
+                    <div class="metrics-row">
+                        <div class="metric">
+                            <span class="metric-label">当前回撤</span>
+                            <span class="metric-value negative" id="nasdaq100-current-drawdown">加载中...</span>
+                            <span class="metric-sub" id="current-dd-days"></span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">最大回撤</span>
+                            <span class="metric-value negative" id="nasdaq100-max-drawdown">加载中...</span>
+                            <span class="metric-sub" id="max-dd-days"></span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">历史最高</span>
+                            <span class="metric-value positive" id="nasdaq100-peak">加载中...</span>
+                            <span class="metric-sub" id="peak-date"></span>
+                        </div>
+                    </div>
+                    <div class="data-info" id="nasdaq100-info"></div>
+                    <div class="drawdown-info" id="current-dd-info"></div>
+                    <div class="drawdown-info" id="max-dd-info"></div>
+                </div>
+                <button class="refresh-btn" onclick="refreshData()">刷新</button>
+            </div>
+            <div class="chart-container" id="chart-container">
+                <svg id="chart" class="chart-svg"></svg>
+                <div class="tooltip" id="tooltip">
+                    <div class="tooltip-date" id="tooltip-date"></div>
+                    <div class="tooltip-price" id="tooltip-price"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="last-updated">
+            更新: <span id="last-updated">加载中...</span>
+        </div>
+    </div>
+    
+    <script>
+        var currentYears = 1;
+        var currentDDData = null;
+        var maxDDData = null;
+        
+        async function fetchIndexData() {
+            try {
+                const response = await fetch('/api/indexes?years=' + currentYears);
+                const data = await response.json();
+                
+                if (data.nasdaq100 && data.nasdaq100.data) {
+                    const currentDD = (data.nasdaq100.current_drawdown * 100).toFixed(2);
+                    document.getElementById('nasdaq100-current-drawdown').textContent = currentDD + '%';
+                    document.getElementById('current-dd-days').textContent = '形成: ' + data.nasdaq100.formation_days + '天';
+                    
+                    const maxDD = (data.nasdaq100.max_drawdown * 100).toFixed(2);
+                    document.getElementById('nasdaq100-max-drawdown').textContent = maxDD + '%';
+                    document.getElementById('max-dd-days').textContent = '形成' + data.nasdaq100.max_formation_days + '天|修复' + data.nasdaq100.recovery_days + '天';
+                    
+                    document.getElementById('nasdaq100-peak').textContent = data.nasdaq100.peak.toFixed(2);
+                    document.getElementById('peak-date').textContent = data.nasdaq100.peak_date;
+                    
+                    const dataCount = data.nasdaq100.data.length;
+                    const latestPrice = data.nasdaq100.data[dataCount - 1];
+                    const firstPrice = data.nasdaq100.data[0];
+                    const change = ((latestPrice - firstPrice) / firstPrice * 100).toFixed(2);
+                    
+                    document.getElementById('nasdaq100-info').textContent = 
+                        '数据' + dataCount + '条|最新' + latestPrice.toFixed(2) + '|涨跌' + change + '%';
+                    
+                    currentDDData = {
+                        peakIndex: data.nasdaq100.peak_index,
+                        peakDate: data.nasdaq100.peak_date,
+                        formationDays: data.nasdaq100.formation_days
+                    };
+                    
+                    maxDDData = {
+                        maxDrawdown: data.nasdaq100.max_drawdown,
+                        maxValue: data.nasdaq100.max_value,
+                        minValue: data.nasdaq100.min_value,
+                        maxDate: data.nasdaq100.max_date,
+                        minDate: data.nasdaq100.min_date,
+                        maxIndex: data.nasdaq100.max_index,
+                        minIndex: data.nasdaq100.min_index,
+                        formationDays: data.nasdaq100.max_formation_days,
+                        recoveryDays: data.nasdaq100.recovery_days
+                    };
+                    
+                    document.getElementById('current-dd-info').innerHTML = 
+                        '当前: <span style="color:#43a047">' + data.nasdaq100.peak_date + '</span>峰值起，持续' + data.nasdaq100.formation_days + '天';
+                    
+                    document.getElementById('max-dd-info').innerHTML = 
+                        '最大: <span style="color:#43a047">' + data.nasdaq100.max_value.toFixed(0) + '</span>(' + data.nasdaq100.max_date + ')→<span style="color:#e53935">' + data.nasdaq100.min_value.toFixed(0) + '</span>(' + data.nasdaq100.min_date + ')';
+                    
+                    drawChart(data.nasdaq100.data, data.nasdaq100.dates);
+                }
+                
+                document.getElementById('last-updated').textContent = data.last_update || new Date().toLocaleString();
+            } catch (error) {
+                console.error('获取数据失败:', error);
+                document.getElementById('nasdaq100-current-drawdown').textContent = '获取失败';
+            }
+        }
+        
+        function drawChart(prices, dates) {
+            const svg = document.getElementById('chart');
+            const rect = svg.getBoundingClientRect();
+            const width = rect.width || 800;
+            const height = rect.height || 400;
+            const padding = { top: 12, right: 12, bottom: 22, left: 45 };
+            
+            const minPrice = Math.min(...prices);
+            const maxPrice = Math.max(...prices);
+            const priceRange = maxPrice - minPrice || 1;
+            
+            const chartWidth = width - padding.left - padding.right;
+            const chartHeight = height - padding.top - padding.bottom;
+            
+            const xScale = (i) => padding.left + (i / (prices.length - 1)) * chartWidth;
+            const yScale = (price) => padding.top + chartHeight - ((price - minPrice) / priceRange) * chartHeight;
+            
+            let pathD = '';
+            let areaD = '';
+            
+            for (let i = 0; i < prices.length; i++) {
+                const x = xScale(i);
+                const y = yScale(prices[i]);
+                
+                if (i === 0) {
+                    pathD = 'M ' + x + ' ' + y;
+                    areaD = 'M ' + x + ' ' + (padding.top + chartHeight) + ' L ' + x + ' ' + y;
+                } else {
+                    pathD += ' L ' + x + ' ' + y;
+                    areaD += ' L ' + x + ' ' + y;
+                }
+            }
+            
+            areaD += ' L ' + xScale(prices.length - 1) + ' ' + (padding.top + chartHeight) + ' Z';
+            
+            let xLabels = '';
+            const labelCount = 5;
+            const step = Math.floor(dates.length / labelCount);
+            
+            for (let i = 0; i < labelCount; i++) {
+                const idx = i * step;
+                if (idx < dates.length) {
+                    const x = xScale(idx);
+                    const date = dates[idx];
+                    xLabels += '<text x="' + x + '" y="' + (height - 4) + '" font-size="10" fill="#888" text-anchor="middle">' + date + '</text>';
+                }
+            }
+            
+            let yLabels = '';
+            const yLabelCount = 3;
+            
+            for (let i = 0; i <= yLabelCount; i++) {
+                const price = minPrice + (priceRange * i / yLabelCount);
+                const y = yScale(price);
+                yLabels += '<text x="' + (padding.left - 4) + '" y="' + y + '" font-size="10" fill="#888" text-anchor="end">' + price.toFixed(0) + '</text>';
+                yLabels += '<line x1="' + padding.left + '" y1="' + y + '" x2="' + (width - padding.right) + '" y2="' + y + '" stroke="#eee" stroke-width="1"/>';
+            }
+            
+            let markers = '';
+            
+            if (currentDDData && currentDDData.peakIndex !== undefined) {
+                const peakX = xScale(currentDDData.peakIndex);
+                const peakY = yScale(prices[currentDDData.peakIndex]);
+                const endX = xScale(prices.length - 1);
+                
+                markers += '<rect x="' + peakX + '" y="' + padding.top + '" width="' + (endX - peakX) + '" height="' + chartHeight + '" fill="rgba(255, 165, 0, 0.1)"/>';
+                markers += '<line x1="' + peakX + '" y1="' + padding.top + '" x2="' + peakX + '" y2="' + (padding.top + chartHeight) + '" stroke="orange" stroke-width="1" stroke-dasharray="3"/>';
+                markers += '<circle cx="' + peakX + '" cy="' + peakY + '" r="4" fill="orange" stroke="white" stroke-width="1.5"/>';
+                
+                const currentMidX = (peakX + endX) / 2;
+                const bottomY = padding.top + chartHeight - 3;
+                markers += '<text x="' + currentMidX + '" y="' + bottomY + '" font-size="9" fill="orange" text-anchor="middle">形成' + currentDDData.formationDays + '天</text>';
+            }
+            
+            if (maxDDData) {
+                const maxX = xScale(maxDDData.maxIndex);
+                const maxY = yScale(maxDDData.maxValue);
+                const minX = xScale(maxDDData.minIndex);
+                const minY = yScale(maxDDData.minValue);
+                
+                markers += '<circle cx="' + maxX + '" cy="' + maxY + '" r="4" fill="#43a047" stroke="white" stroke-width="1.5"/>';
+                markers += '<circle cx="' + minX + '" cy="' + minY + '" r="4" fill="#e53935" stroke="white" stroke-width="1.5"/>';
+                
+                const startX = Math.min(maxX, minX);
+                const endX = Math.max(maxX, minX);
+                const rectHeight = Math.abs(maxY - minY);
+                const rectY = Math.min(maxY, minY);
+                
+                markers += '<rect x="' + startX + '" y="' + rectY + '" width="' + (endX - startX) + '" height="' + rectHeight + '" fill="rgba(229, 57, 53, 0.1)" stroke="rgba(229, 57, 53, 0.3)" stroke-width="1" stroke-dasharray="3"/>';
+                
+                const ddPercent = (maxDDData.maxDrawdown * 100).toFixed(2);
+                const textX = (startX + endX) / 2;
+                const textY = rectY + rectHeight / 2;
+                markers += '<text x="' + textX + '" y="' + textY + '" font-size="10" fill="#e53935" text-anchor="middle" font-weight="bold">最大回撤' + ddPercent + '%</text>';
+                
+                const bottomY = padding.top + chartHeight - 3;
+                markers += '<text x="' + textX + '" y="' + bottomY + '" font-size="9" fill="#e53935" text-anchor="middle">形成' + maxDDData.formationDays + '天</text>';
+                
+                if (maxDDData.recoveryDays > 0 && maxDDData.minIndex + maxDDData.recoveryDays < prices.length) {
+                    const recoveryEndIndex = maxDDData.minIndex + maxDDData.recoveryDays;
+                    const recoveryEndX = xScale(recoveryEndIndex);
+                    const recoveryEndY = yScale(prices[recoveryEndIndex]);
+                    
+                    markers += '<rect x="' + endX + '" y="' + rectY + '" width="' + (recoveryEndX - endX) + '" height="' + rectHeight + '" fill="rgba(67, 160, 71, 0.1)"/>';
+                    markers += '<line x1="' + recoveryEndX + '" y1="' + padding.top + '" x2="' + recoveryEndX + '" y2="' + (padding.top + chartHeight) + '" stroke="#43a047" stroke-width="1" stroke-dasharray="3"/>';
+                    markers += '<circle cx="' + recoveryEndX + '" cy="' + recoveryEndY + '" r="4" fill="#43a047" stroke="white" stroke-width="1.5"/>';
+                    
+                    const recoveryMidX = (endX + recoveryEndX) / 2;
+                    markers += '<text x="' + recoveryMidX + '" y="' + bottomY + '" font-size="9" fill="#43a047" text-anchor="middle">修复' + maxDDData.recoveryDays + '天</text>';
+                }
+            }
+            
+            svg.innerHTML = 
+                yLabels +
+                '<path d="' + areaD + '" fill="rgba(75, 192, 192, 0.1)"/>' +
+                '<path d="' + pathD + '" fill="none" stroke="rgba(75, 192, 192, 1)" stroke-width="1.5"/>' +
+                markers +
+                xLabels;
+            
+            svg.chartInfo = {
+                prices: prices,
+                dates: dates,
+                xScale: xScale,
+                yScale: yScale,
+                padding: padding,
+                chartWidth: chartWidth,
+                chartHeight: chartHeight,
+                minPrice: minPrice,
+                maxPrice: maxPrice,
+                priceRange: priceRange
+            };
+        }
+        
+        function setupChartInteraction() {
+            const chartContainer = document.getElementById('chart-container');
+            const svg = document.getElementById('chart');
+            const tooltip = document.getElementById('tooltip');
+            const tooltipDate = document.getElementById('tooltip-date');
+            const tooltipPrice = document.getElementById('tooltip-price');
+            
+            let isTouching = false;
+            
+            function handleInteraction(e) {
+                if (!svg.chartInfo || svg.chartInfo.prices.length === 0) return;
+                
+                const rect = svg.getBoundingClientRect();
+                let clientX, clientY;
+                
+                if (e.touches && e.touches.length > 0) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+                
+                const x = clientX - rect.left;
+                const y = clientY - rect.top;
+                
+                const info = svg.chartInfo;
+                const padding = info.padding;
+                
+                if (x < padding.left || x > rect.width - padding.right || 
+                    y < padding.top || y > rect.height - padding.bottom) {
+                    tooltip.classList.remove('visible');
+                    return;
+                }
+                
+                const chartX = x - padding.left;
+                const chartWidth = info.chartWidth;
+                const index = Math.round((chartX / chartWidth) * (info.prices.length - 1));
+                
+                if (index >= 0 && index < info.prices.length) {
+                    const date = info.dates[index];
+                    const price = info.prices[index];
+                    
+                    tooltipDate.textContent = '日期: ' + date;
+                    tooltipPrice.textContent = '指数: ' + price.toFixed(2);
+                    
+                    const tooltipX = clientX - chartContainer.getBoundingClientRect().left + 15;
+                    const tooltipY = clientY - chartContainer.getBoundingClientRect().top - 10;
+                    
+                    tooltip.style.left = Math.min(tooltipX, rect.width - 150) + 'px';
+                    tooltip.style.top = Math.max(tooltipY, 10) + 'px';
+                    tooltip.classList.add('visible');
+                }
+            }
+            
+            chartContainer.addEventListener('touchstart', function(e) {
+                isTouching = true;
+                handleInteraction(e);
+            }, { passive: true });
+            
+            chartContainer.addEventListener('touchmove', function(e) {
+                if (isTouching) {
+                    handleInteraction(e);
+                }
+            }, { passive: true });
+            
+            chartContainer.addEventListener('touchend', function() {
+                isTouching = false;
+                setTimeout(function() {
+                    tooltip.classList.remove('visible');
+                }, 1000);
+            });
+            
+            chartContainer.addEventListener('mousemove', function(e) {
+                handleInteraction(e);
+            });
+            
+            chartContainer.addEventListener('mouseleave', function() {
+                tooltip.classList.remove('visible');
+            });
+        }
+        
+        function setupTimeRangeSelector() {
+            const buttons = document.querySelectorAll('.time-btn');
+            buttons.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    buttons.forEach(function(b) {
+                        b.classList.remove('active');
+                    });
+                    btn.classList.add('active');
+                    currentYears = parseInt(btn.getAttribute('data-years'));
+                    fetchIndexData();
+                });
+            });
+        }
+        
+        async function refreshData() {
+            try {
+                await fetch('/api/refresh');
+                await fetchIndexData();
+            } catch (error) {
+                console.error('刷新失败:', error);
+            }
+        }
+        
+        fetchIndexData();
+        setupChartInteraction();
+        setupTimeRangeSelector();
+        setInterval(fetchIndexData, 24 * 60 * 60 * 1000);
+        
+        window.addEventListener('resize', fetchIndexData);
+    </script>
+</body>
+</html>

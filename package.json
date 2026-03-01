@@ -1,0 +1,21 @@
+{
+  "name": "stock-index-monitor",
+  "version": "1.0.0",
+  "description": "纳斯达克100和标普500指数监控系统",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "localtunnel": "^2.0.2"
+  },
+  "keywords": [
+    "stock",
+    "nasdaq",
+    "sp500",
+    "drawdown"
+  ],
+  "author": "",
+  "license": "MIT"
+}
