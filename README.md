@@ -69,7 +69,7 @@ node server.js
 - 优先使用 Eastmoney API 获取纳斯达克100指数数据
 - 备用使用 Yahoo Finance API
 - 最终备用使用 Stooq API
-- 当所有API都失败时，使用模拟数据
+- 当所有API都失败时，禁止使用模拟数据，前端显示错误信息
 
 ## 部署说明
 

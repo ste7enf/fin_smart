@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>纳斯达克100指数监控</title>
+    <title>智能创作</title>
     <style>
         * {
             box-sizing: border-box;
@@ -194,6 +194,256 @@
             color: #81c784;
         }
 
+        /* 导航栏样式 */
+        .navbar {
+            display: flex;
+            background-color: #333;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .nav-item {
+            flex: 1;
+            padding: 8px 10px;
+            text-align: center;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s;
+        }
+        .nav-item:hover {
+            background-color: #555;
+        }
+        .nav-item.active {
+            background-color: #4CAF50;
+        }
+
+        /* 指数选择器样式 */
+        .index-selector {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+        .index-btn {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid #4CAF50;
+            background-color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #4CAF50;
+            font-weight: bold;
+            touch-action: manipulation;
+            text-align: center;
+        }
+        .index-btn:active {
+            background-color: #e8f5e9;
+        }
+        .index-btn.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        /* 智能助手样式 */
+        .assistant-container {
+            display: none;
+            background-color: white;
+            border-radius: 10px;
+            padding: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+            overflow: hidden;
+        }
+        .assistant-container.active {
+            display: flex;
+        }
+        .assistant-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+        }
+        .assistant-input {
+            width: 100%;
+            height: 120px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            resize: none;
+            font-family: monospace;
+        }
+        .assistant-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            align-self: flex-start;
+        }
+        .assistant-btn:active {
+            background-color: #388E3C;
+        }
+        .assistant-result {
+            background-color: #f9f9f9;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* 数据录入表单样式 */
+        .record-form {
+            background-color: #f9f9f9;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .form-row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+        .form-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group.small {
+            flex: 0 0 110px;
+        }
+        .form-label {
+            display: block;
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 3px;
+            height: 16px;
+            line-height: 16px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 12px;
+            height: 32px;
+            box-sizing: border-box;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        .record-form .assistant-btn {
+            height: 32px;
+            padding: 0 16px;
+            margin-bottom: 0;
+            margin-top: 19px;
+        }
+
+        /* 数据列表样式 */
+        .record-list-container {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .list-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #333;
+            margin: 0 0 8px 0;
+        }
+        .record-list {
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 6px;
+        }
+        .record-empty {
+            padding: 20px;
+            text-align: center;
+            color: #999;
+            font-size: 13px;
+        }
+        .record-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .record-table th {
+            background-color: #f5f5f5;
+            padding: 8px 10px;
+            text-align: left;
+            font-weight: bold;
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            position: sticky;
+            top: 0;
+        }
+        .record-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .record-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        .delete-btn {
+            background-color: #e53935;
+            color: white;
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .delete-btn:active {
+            background-color: #c62828;
+        }
+
+        /* 数据统计样式 */
+        .record-stats {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-around;
+        }
+        .stat-item {
+            text-align: center;
+            color: white;
+        }
+        .stat-label {
+            display: block;
+            font-size: 11px;
+            opacity: 0.9;
+            margin-bottom: 2px;
+        }
+        .stat-value {
+            display: block;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        .result-label {
+            color: #666;
+        }
+        .result-value {
+            font-weight: bold;
+            color: #333;
+        }
+
         @media screen and (min-width: 768px) {
             body {
                 padding: 15px;
@@ -260,12 +510,25 @@
 </head>
 <body>
     <div class="container">
-        <h1>纳斯达克100指数监控</h1>
+        <h1>智能创作</h1>
         
-        <div class="index-card">
+        <!-- 导航栏 -->
+        <div class="navbar">
+            <div class="nav-item active" data-page="index">指数监控</div>
+            <div class="nav-item" data-page="assistant">智能助手</div>
+        </div>
+        
+        <div class="index-card" id="index-page">
+            <!-- 指数选择器 -->
+            <div class="index-selector">
+                <button class="index-btn active" data-symbol="ndx">纳斯达克100</button>
+                <button class="index-btn" data-symbol="spx">标普500</button>
+                <button class="index-btn" data-symbol="compare">对比</button>
+            </div>
+            
             <div class="header-row">
                 <div class="header-left">
-                    <h2>纳斯达克100指数 (NDX)</h2>
+                    <h2 id="index-name">纳斯达克100指数 (NDX)</h2>
                     <div class="time-range-selector">
                         <button class="time-btn active" data-years="1">1年</button>
                         <button class="time-btn" data-years="3">3年</button>
@@ -277,21 +540,21 @@
                     <div class="metrics-row">
                         <div class="metric">
                             <span class="metric-label">当前回撤</span>
-                            <span class="metric-value negative" id="nasdaq100-current-drawdown">加载中...</span>
+                            <span class="metric-value negative" id="index-current-drawdown">加载中...</span>
                             <span class="metric-sub" id="current-dd-days"></span>
                         </div>
                         <div class="metric">
                             <span class="metric-label">最大回撤</span>
-                            <span class="metric-value negative" id="nasdaq100-max-drawdown">加载中...</span>
+                            <span class="metric-value negative" id="index-max-drawdown">加载中...</span>
                             <span class="metric-sub" id="max-dd-days"></span>
                         </div>
                         <div class="metric">
                             <span class="metric-label">历史最高</span>
-                            <span class="metric-value positive" id="nasdaq100-peak">加载中...</span>
+                            <span class="metric-value positive" id="index-peak">加载中...</span>
                             <span class="metric-sub" id="peak-date"></span>
                         </div>
                     </div>
-                    <div class="data-info" id="nasdaq100-info"></div>
+                    <div class="data-info" id="index-info"></div>
                     <div class="drawdown-info" id="current-dd-info"></div>
                     <div class="drawdown-info" id="max-dd-info"></div>
                 </div>
@@ -309,69 +572,199 @@
         <div class="last-updated">
             更新: <span id="last-updated">加载中...</span>
         </div>
+        
+        <!-- 智能助手页面 -->
+        <div class="assistant-container" id="assistant-page">
+            <h2 class="assistant-title">智能助手 - 数据录入</h2>
+            
+            <!-- 数据录入表单 -->
+            <div class="record-form">
+                <div class="form-row">
+                    <div class="form-group small">
+                        <label class="form-label">日期</label>
+                        <input type="date" id="record-date" class="form-input">
+                    </div>
+                    <div class="form-group small">
+                        <label class="form-label">数值</label>
+                        <input type="number" id="record-value" class="form-input" placeholder="请输入数值" step="0.01">
+                    </div>
+                    <button class="assistant-btn" onclick="saveRecord()">提交</button>
+                </div>
+            </div>
+            
+            <!-- 数据统计 -->
+            <div class="record-stats" id="record-stats" style="display: none;">
+                <div class="stat-item">
+                    <span class="stat-label">总和:</span>
+                    <span class="stat-value" id="stat-sum">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">平均值:</span>
+                    <span class="stat-value" id="stat-avg">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">记录数:</span>
+                    <span class="stat-value" id="stat-count">0</span>
+                </div>
+            </div>
+            
+            <!-- 数据列表 -->
+            <div class="record-list-container">
+                <h3 class="list-title">数据列表</h3>
+                <div class="record-list" id="record-list">
+                    <div class="record-empty">暂无数据</div>
+                </div>
+            </div>
+        </div>
     </div>
     
     <script>
         var currentYears = 1;
+        var currentSymbol = 'ndx';
         var currentDDData = null;
         var maxDDData = null;
         
         async function fetchIndexData() {
             try {
-                const response = await fetch('/api/indexes?years=' + currentYears);
+                const response = await fetch('/api/indexes?years=' + currentYears + '&symbol=' + currentSymbol);
                 const data = await response.json();
                 
-                if (data.nasdaq100 && data.nasdaq100.data) {
-                    const currentDD = (data.nasdaq100.current_drawdown * 100).toFixed(2);
-                    document.getElementById('nasdaq100-current-drawdown').textContent = currentDD + '%';
-                    document.getElementById('current-dd-days').textContent = '形成: ' + data.nasdaq100.formation_days + '天';
+                // 对比模式
+                if (currentSymbol === 'compare' && data.compare) {
+                    const ndx = data.compare.ndx;
+                    const spx = data.compare.spx;
                     
-                    const maxDD = (data.nasdaq100.max_drawdown * 100).toFixed(2);
-                    document.getElementById('nasdaq100-max-drawdown').textContent = maxDD + '%';
-                    document.getElementById('max-dd-days').textContent = '形成' + data.nasdaq100.max_formation_days + '天|修复' + data.nasdaq100.recovery_days + '天';
+                    document.getElementById('index-name').textContent = '指数对比 (归一化)';
                     
-                    document.getElementById('nasdaq100-peak').textContent = data.nasdaq100.peak.toFixed(2);
-                    document.getElementById('peak-date').textContent = data.nasdaq100.peak_date;
+                    // 纳斯达克100指标
+                    const ndxCurrentDD = (ndx.current_drawdown * 100).toFixed(2);
+                    const ndxMaxDD = (ndx.max_drawdown * 100).toFixed(2);
                     
-                    const dataCount = data.nasdaq100.data.length;
-                    const latestPrice = data.nasdaq100.data[dataCount - 1];
-                    const firstPrice = data.nasdaq100.data[0];
-                    const change = ((latestPrice - firstPrice) / firstPrice * 100).toFixed(2);
+                    // 标普500指标
+                    const spxCurrentDD = (spx.current_drawdown * 100).toFixed(2);
+                    const spxMaxDD = (spx.max_drawdown * 100).toFixed(2);
                     
-                    document.getElementById('nasdaq100-info').textContent = 
-                        '数据' + dataCount + '条|最新' + latestPrice.toFixed(2) + '|涨跌' + change + '%';
+                    // 显示合并的指标（以纳斯达克100为主显示）
+                    document.getElementById('index-current-drawdown').innerHTML = 
+                        '<span style="color:#4CAF50">NDX: ' + ndxCurrentDD + '%</span> | <span style="color:#2196F3">SPX: ' + spxCurrentDD + '%</span>';
+                    document.getElementById('current-dd-days').textContent = 
+                        'NDX形成' + ndx.formation_days + '天 | SPX形成' + spx.formation_days + '天';
                     
+                    document.getElementById('index-max-drawdown').innerHTML = 
+                        '<span style="color:#4CAF50">NDX: ' + ndxMaxDD + '%</span> | <span style="color:#2196F3">SPX: ' + spxMaxDD + '%</span>';
+                    document.getElementById('max-dd-days').textContent = 
+                        'NDX形成' + ndx.max_formation_days + '天|修复' + ndx.recovery_days + '天 | SPX形成' + spx.max_formation_days + '天|修复' + spx.recovery_days + '天';
+                    
+                    document.getElementById('index-peak').innerHTML = 
+                        '<span style="color:#4CAF50">' + ndx.peak.toFixed(0) + '</span> | <span style="color:#2196F3">' + spx.peak.toFixed(0) + '</span>';
+                    document.getElementById('peak-date').textContent = 
+                        'NDX: ' + ndx.peak_date + ' | SPX: ' + spx.peak_date;
+                    
+                    document.getElementById('index-info').textContent = 
+                        '纳斯达克100: ' + ndx.data.length + '条 | 标普500: ' + spx.data.length + '条';
+                    
+                    // 当前回撤详情
+                    document.getElementById('current-dd-info').innerHTML = 
+                        '<span style="color:#4CAF50">NDX: ' + ndx.peak_date + '峰值起，持续' + ndx.formation_days + '天</span> | <span style="color:#2196F3">SPX: ' + spx.peak_date + '峰值起，持续' + spx.formation_days + '天</span>';
+                    
+                    // 最大回撤详情
+                    document.getElementById('max-dd-info').innerHTML = 
+                        '<span style="color:#4CAF50">NDX: ' + ndx.max_value.toFixed(0) + '(' + ndx.max_date + ')→' + ndx.min_value.toFixed(0) + '(' + ndx.min_date + ')</span><br>' +
+                        '<span style="color:#2196F3">SPX: ' + spx.max_value.toFixed(0) + '(' + spx.max_date + ')→' + spx.min_value.toFixed(0) + '(' + spx.min_date + ')</span>';
+                    
+                    // 保存数据用于图表标记
                     currentDDData = {
-                        peakIndex: data.nasdaq100.peak_index,
-                        peakDate: data.nasdaq100.peak_date,
-                        formationDays: data.nasdaq100.formation_days
+                        ndx: { peakIndex: ndx.peak_index, peakDate: ndx.peak_date, formationDays: ndx.formation_days },
+                        spx: { peakIndex: spx.peak_index, peakDate: spx.peak_date, formationDays: spx.formation_days }
                     };
                     
                     maxDDData = {
-                        maxDrawdown: data.nasdaq100.max_drawdown,
-                        maxValue: data.nasdaq100.max_value,
-                        minValue: data.nasdaq100.min_value,
-                        maxDate: data.nasdaq100.max_date,
-                        minDate: data.nasdaq100.min_date,
-                        maxIndex: data.nasdaq100.max_index,
-                        minIndex: data.nasdaq100.min_index,
-                        formationDays: data.nasdaq100.max_formation_days,
-                        recoveryDays: data.nasdaq100.recovery_days
+                        ndx: {
+                            maxDrawdown: ndx.max_drawdown,
+                            maxValue: ndx.max_value,
+                            minValue: ndx.min_value,
+                            maxDate: ndx.max_date,
+                            minDate: ndx.min_date,
+                            maxIndex: ndx.max_index,
+                            minIndex: ndx.min_index,
+                            formationDays: ndx.max_formation_days,
+                            recoveryDays: ndx.recovery_days
+                        },
+                        spx: {
+                            maxDrawdown: spx.max_drawdown,
+                            maxValue: spx.max_value,
+                            minValue: spx.min_value,
+                            maxDate: spx.max_date,
+                            minDate: spx.min_date,
+                            maxIndex: spx.max_index,
+                            minIndex: spx.min_index,
+                            formationDays: spx.max_formation_days,
+                            recoveryDays: spx.recovery_days
+                        }
+                    };
+                    
+                    drawCompareChart(data.compare.ndx, data.compare.spx);
+                    document.getElementById('last-updated').textContent = data.last_update || new Date().toLocaleString();
+                    return;
+                }
+                
+                if (data.index && data.index.data) {
+                    const index = data.index;
+                    
+                    // 更新指数名称
+                    var symbolText = currentSymbol === 'spx' ? ' (SPX)' : ' (NDX)';
+                    document.getElementById('index-name').textContent = index.name + symbolText;
+                    
+                    const currentDD = (index.current_drawdown * 100).toFixed(2);
+                    document.getElementById('index-current-drawdown').textContent = currentDD + '%';
+                    document.getElementById('current-dd-days').textContent = '形成: ' + index.formation_days + '天';
+                    
+                    const maxDD = (index.max_drawdown * 100).toFixed(2);
+                    document.getElementById('index-max-drawdown').textContent = maxDD + '%';
+                    document.getElementById('max-dd-days').textContent = '形成' + index.max_formation_days + '天|修复' + index.recovery_days + '天';
+                    
+                    document.getElementById('index-peak').textContent = index.peak.toFixed(2);
+                    document.getElementById('peak-date').textContent = index.peak_date;
+                    
+                    const dataCount = index.data.length;
+                    const latestPrice = index.data[dataCount - 1];
+                    const firstPrice = index.data[0];
+                    const change = ((latestPrice - firstPrice) / firstPrice * 100).toFixed(2);
+                    
+                    document.getElementById('index-info').textContent = 
+                        '数据' + dataCount + '条|最新' + latestPrice.toFixed(2) + '|涨跌' + change + '%';
+                    
+                    currentDDData = {
+                        peakIndex: index.peak_index,
+                        peakDate: index.peak_date,
+                        formationDays: index.formation_days
+                    };
+                    
+                    maxDDData = {
+                        maxDrawdown: index.max_drawdown,
+                        maxValue: index.max_value,
+                        minValue: index.min_value,
+                        maxDate: index.max_date,
+                        minDate: index.min_date,
+                        maxIndex: index.max_index,
+                        minIndex: index.min_index,
+                        formationDays: index.max_formation_days,
+                        recoveryDays: index.recovery_days
                     };
                     
                     document.getElementById('current-dd-info').innerHTML = 
-                        '当前: <span style="color:#43a047">' + data.nasdaq100.peak_date + '</span>峰值起，持续' + data.nasdaq100.formation_days + '天';
+                        '当前: <span style="color:#43a047">' + index.peak_date + '</span>峰值起，持续' + index.formation_days + '天';
                     
                     document.getElementById('max-dd-info').innerHTML = 
-                        '最大: <span style="color:#43a047">' + data.nasdaq100.max_value.toFixed(0) + '</span>(' + data.nasdaq100.max_date + ')→<span style="color:#e53935">' + data.nasdaq100.min_value.toFixed(0) + '</span>(' + data.nasdaq100.min_date + ')';
+                        '最大: <span style="color:#43a047">' + index.max_value.toFixed(0) + '</span>(' + index.max_date + ')→<span style="color:#e53935">' + index.min_value.toFixed(0) + '</span>(' + index.min_date + ')';
                     
-                    drawChart(data.nasdaq100.data, data.nasdaq100.dates);
+                    drawChart(index.data, index.dates);
                 }
                 
                 document.getElementById('last-updated').textContent = data.last_update || new Date().toLocaleString();
             } catch (error) {
                 console.error('获取数据失败:', error);
-                document.getElementById('nasdaq100-current-drawdown').textContent = '获取失败';
+                document.getElementById('index-current-drawdown').textContent = '获取失败';
             }
         }
         
@@ -508,6 +901,109 @@
             };
         }
         
+        function drawCompareChart(ndxData, spxData) {
+            const svg = document.getElementById('chart');
+            const rect = svg.getBoundingClientRect();
+            const width = rect.width || 800;
+            const height = rect.height || 400;
+            const padding = { top: 12, right: 12, bottom: 22, left: 45 };
+            
+            const ndxPrices = ndxData.normalized.map(Number);
+            const spxPrices = spxData.normalized.map(Number);
+            const dates = ndxData.dates;
+            
+            const allPrices = [...ndxPrices, ...spxPrices];
+            const minPrice = Math.min(...allPrices);
+            const maxPrice = Math.max(...allPrices);
+            const priceRange = maxPrice - minPrice || 1;
+            
+            const chartWidth = width - padding.left - padding.right;
+            const chartHeight = height - padding.top - padding.bottom;
+            
+            const xScale = (i) => padding.left + (i / (dates.length - 1)) * chartWidth;
+            const yScale = (price) => padding.top + chartHeight - ((price - minPrice) / priceRange) * chartHeight;
+            
+            // 纳斯达克100曲线（绿色）
+            let ndxPathD = '';
+            for (let i = 0; i < ndxPrices.length; i++) {
+                const x = xScale(i);
+                const y = yScale(ndxPrices[i]);
+                if (i === 0) {
+                    ndxPathD = 'M ' + x + ' ' + y;
+                } else {
+                    ndxPathD += ' L ' + x + ' ' + y;
+                }
+            }
+            
+            // 标普500曲线（蓝色）
+            let spxPathD = '';
+            for (let i = 0; i < spxPrices.length; i++) {
+                const x = xScale(i);
+                const y = yScale(spxPrices[i]);
+                if (i === 0) {
+                    spxPathD = 'M ' + x + ' ' + y;
+                } else {
+                    spxPathD += ' L ' + x + ' ' + y;
+                }
+            }
+            
+            // X轴标签
+            let xLabels = '';
+            const labelCount = 5;
+            const step = Math.floor(dates.length / labelCount);
+            
+            for (let i = 0; i < labelCount; i++) {
+                const idx = i * step;
+                if (idx < dates.length) {
+                    const x = xScale(idx);
+                    const date = dates[idx];
+                    xLabels += '<text x="' + x + '" y="' + (height - 4) + '" font-size="10" fill="#888" text-anchor="middle">' + date + '</text>';
+                }
+            }
+            
+            // Y轴标签
+            let yLabels = '';
+            const yLabelCount = 3;
+            
+            for (let i = 0; i <= yLabelCount; i++) {
+                const price = minPrice + (priceRange * i / yLabelCount);
+                const y = yScale(price);
+                yLabels += '<text x="' + (padding.left - 4) + '" y="' + y + '" font-size="10" fill="#888" text-anchor="end">' + price.toFixed(0) + '</text>';
+                yLabels += '<line x1="' + padding.left + '" y1="' + y + '" x2="' + (width - padding.right) + '" y2="' + y + '" stroke="#eee" stroke-width="1"/>';
+            }
+            
+            // 图例
+            let legend = '<rect x="' + (width - 180) + '" y="' + (padding.top + 5) + '" width="170" height="50" fill="rgba(255,255,255,0.9)" stroke="#ddd" rx="4"/>';
+            legend += '<line x1="' + (width - 170) + '" y1="' + (padding.top + 20) + '" x2="' + (width - 150) + '" y2="' + (padding.top + 20) + '" stroke="#4CAF50" stroke-width="2"/>';
+            legend += '<text x="' + (width - 145) + '" y="' + (padding.top + 24) + '" font-size="11" fill="#333">纳斯达克100</text>';
+            legend += '<text x="' + (width - 145) + '" y="' + (padding.top + 38) + '" font-size="9" fill="#666">最新: ' + ndxPrices[ndxPrices.length - 1] + '</text>';
+            legend += '<line x1="' + (width - 170) + '" y1="' + (padding.top + 45) + '" x2="' + (width - 150) + '" y2="' + (padding.top + 45) + '" stroke="#2196F3" stroke-width="2"/>';
+            legend += '<text x="' + (width - 145) + '" y="' + (padding.top + 49) + '" font-size="11" fill="#333">标普500</text>';
+            legend += '<text x="' + (width - 145) + '" y="' + (padding.top + 63) + '" font-size="9" fill="#666">最新: ' + spxPrices[spxPrices.length - 1] + '</text>';
+            
+            svg.innerHTML = 
+                yLabels +
+                '<path d="' + ndxPathD + '" fill="none" stroke="#4CAF50" stroke-width="1.5"/>' +
+                '<path d="' + spxPathD + '" fill="none" stroke="#2196F3" stroke-width="1.5"/>' +
+                legend +
+                xLabels;
+            
+            svg.chartInfo = {
+                ndxPrices: ndxPrices,
+                spxPrices: spxPrices,
+                dates: dates,
+                xScale: xScale,
+                yScale: yScale,
+                padding: padding,
+                chartWidth: chartWidth,
+                chartHeight: chartHeight,
+                minPrice: minPrice,
+                maxPrice: maxPrice,
+                priceRange: priceRange,
+                isCompare: true
+            };
+        }
+        
         function setupChartInteraction() {
             const chartContainer = document.getElementById('chart-container');
             const svg = document.getElementById('chart');
@@ -518,7 +1014,7 @@
             let isTouching = false;
             
             function handleInteraction(e) {
-                if (!svg.chartInfo || svg.chartInfo.prices.length === 0) return;
+                if (!svg.chartInfo) return;
                 
                 const rect = svg.getBoundingClientRect();
                 let clientX, clientY;
@@ -545,14 +1041,21 @@
                 
                 const chartX = x - padding.left;
                 const chartWidth = info.chartWidth;
-                const index = Math.round((chartX / chartWidth) * (info.prices.length - 1));
+                const index = Math.round((chartX / chartWidth) * (info.dates.length - 1));
                 
-                if (index >= 0 && index < info.prices.length) {
+                if (index >= 0 && index < info.dates.length) {
                     const date = info.dates[index];
-                    const price = info.prices[index];
                     
-                    tooltipDate.textContent = '日期: ' + date;
-                    tooltipPrice.textContent = '指数: ' + price.toFixed(2);
+                    if (info.isCompare) {
+                        const ndxPrice = info.ndxPrices[index];
+                        const spxPrice = info.spxPrices[index];
+                        tooltipDate.textContent = '日期: ' + date;
+                        tooltipPrice.innerHTML = '<span style="color:#4CAF50">纳斯达克: ' + ndxPrice + '</span><br><span style="color:#2196F3">标普500: ' + spxPrice + '</span>';
+                    } else {
+                        const price = info.prices[index];
+                        tooltipDate.textContent = '日期: ' + date;
+                        tooltipPrice.textContent = '指数: ' + price.toFixed(2);
+                    }
                     
                     const tooltipX = clientX - chartContainer.getBoundingClientRect().left + 15;
                     const tooltipY = clientY - chartContainer.getBoundingClientRect().top - 10;
@@ -604,6 +1107,20 @@
             });
         }
         
+        function setupIndexSelector() {
+            const buttons = document.querySelectorAll('.index-btn');
+            buttons.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    buttons.forEach(function(b) {
+                        b.classList.remove('active');
+                    });
+                    btn.classList.add('active');
+                    currentSymbol = btn.getAttribute('data-symbol');
+                    fetchIndexData();
+                });
+            });
+        }
+        
         async function refreshData() {
             try {
                 await fetch('/api/refresh');
@@ -616,9 +1133,182 @@
         fetchIndexData();
         setupChartInteraction();
         setupTimeRangeSelector();
+        setupIndexSelector();
         setInterval(fetchIndexData, 24 * 60 * 60 * 1000);
         
         window.addEventListener('resize', fetchIndexData);
+        
+        // 导航栏切换
+        function setupNavigation() {
+            const navItems = document.querySelectorAll('.nav-item');
+            const indexPage = document.getElementById('index-page');
+            const assistantPage = document.getElementById('assistant-page');
+            const lastUpdated = document.querySelector('.last-updated');
+            
+            navItems.forEach(function(item) {
+                item.addEventListener('click', function() {
+                    navItems.forEach(function(nav) {
+                        nav.classList.remove('active');
+                    });
+                    item.classList.add('active');
+                    
+                    const page = item.getAttribute('data-page');
+                    if (page === 'index') {
+                        indexPage.style.display = 'flex';
+                        assistantPage.classList.remove('active');
+                        lastUpdated.style.display = 'block';
+                    } else if (page === 'assistant') {
+                        indexPage.style.display = 'none';
+                        assistantPage.classList.add('active');
+                        lastUpdated.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        // 保存记录
+        async function saveRecord() {
+            const dateInput = document.getElementById('record-date');
+            const valueInput = document.getElementById('record-value');
+            
+            const date = dateInput.value;
+            const value = valueInput.value;
+            
+            if (!date || !value) {
+                alert('请填写日期和数值');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/records', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ date: date, value: parseFloat(value) })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'ok') {
+                    alert('保存成功');
+                    dateInput.value = '';
+                    valueInput.value = '';
+                    loadRecords();
+                } else {
+                    alert('保存失败: ' + data.message);
+                }
+            } catch (error) {
+                console.error('保存失败:', error);
+                alert('保存失败');
+            }
+        }
+        
+        // 加载记录列表
+        async function loadRecords() {
+            try {
+                const response = await fetch('/api/records');
+                const data = await response.json();
+                
+                const listContainer = document.getElementById('record-list');
+                const statsContainer = document.getElementById('record-stats');
+                
+                if (data.status === 'ok' && data.data.length > 0) {
+                    // 计算统计数据
+                    let sum = 0;
+                    let count = data.data.length;
+                    
+                    for (let i = 0; i < data.data.length; i++) {
+                        sum += parseFloat(data.data[i].value);
+                    }
+                    
+                    const avg = sum / count;
+                    
+                    // 显示统计数据
+                    document.getElementById('stat-sum').textContent = sum.toFixed(2);
+                    document.getElementById('stat-avg').textContent = avg.toFixed(2);
+                    document.getElementById('stat-count').textContent = count;
+                    statsContainer.style.display = 'flex';
+                    
+                    // 生成列表HTML
+                    let html = '<table class="record-table"><thead><tr><th>日期</th><th>数值</th><th>操作</th></tr></thead><tbody>';
+                    
+                    for (let i = 0; i < data.data.length; i++) {
+                        const record = data.data[i];
+                        html += '<tr>' +
+                            '<td>' + record.date + '</td>' +
+                            '<td>' + record.value + '</td>' +
+                            '<td><button class="delete-btn" onclick="deleteRecord(' + record.id + ')">删除</button></td>' +
+                            '</tr>';
+                    }
+                    
+                    html += '</tbody></table>';
+                    listContainer.innerHTML = html;
+                } else {
+                    listContainer.innerHTML = '<div class="record-empty">暂无数据</div>';
+                    statsContainer.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                document.getElementById('record-list').innerHTML = '<div class="record-empty">加载失败</div>';
+                document.getElementById('record-stats').style.display = 'none';
+            }
+        }
+        
+        // 删除记录
+        async function deleteRecord(id) {
+            if (!confirm('确定要删除这条记录吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/records/' + id, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'ok') {
+                    loadRecords();
+                } else {
+                    alert('删除失败: ' + data.message);
+                }
+            } catch (error) {
+                console.error('删除失败:', error);
+                alert('删除失败');
+            }
+        }
+        
+        // 导航栏切换
+        function setupNavigation() {
+            const navItems = document.querySelectorAll('.nav-item');
+            const indexPage = document.getElementById('index-page');
+            const assistantPage = document.getElementById('assistant-page');
+            const lastUpdated = document.querySelector('.last-updated');
+            
+            navItems.forEach(function(item) {
+                item.addEventListener('click', function() {
+                    navItems.forEach(function(nav) {
+                        nav.classList.remove('active');
+                    });
+                    item.classList.add('active');
+                    
+                    const page = item.getAttribute('data-page');
+                    if (page === 'index') {
+                        indexPage.style.display = 'flex';
+                        assistantPage.classList.remove('active');
+                        lastUpdated.style.display = 'block';
+                    } else if (page === 'assistant') {
+                        indexPage.style.display = 'none';
+                        assistantPage.classList.add('active');
+                        lastUpdated.style.display = 'none';
+                        loadRecords();
+                    }
+                });
+            });
+        }
+        
+        setupNavigation();
     </script>
 </body>
 </html>
