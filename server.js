@@ -33,8 +33,13 @@ var db = new sqlite3.Database('./data.db', function(err) {
 app.use(express.json());
 
 var allData = { prices: [], dates: [] };
+var h30269Data = { prices: [], dates: [] };
 var sp500Data = { prices: [], dates: [] };
 var lastUpdate = null;
+var isDataReady = false;
+var dataLoadError = null;
+
+var zlib = require('zlib');
 
 function fetchFromStooq(symbol) {
   return new Promise(function(resolve, reject) {
@@ -47,16 +52,15 @@ function fetchFromStooq(symbol) {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate, br',
         'Connection': 'keep-alive'
       },
-      timeout: 15000
+      timeout: 30000
     };
     
     var req = https.request(options, function(response) {
-      var data = '';
+      var chunks = [];
       response.on('data', function(chunk) {
-        data += chunk;
+        chunks.push(chunk);
       });
       response.on('end', function() {
         try {
@@ -66,6 +70,9 @@ function fetchFromStooq(symbol) {
             resolve(null);
             return;
           }
+          
+          var buffer = Buffer.concat(chunks);
+          var data = buffer.toString('utf-8');
           
           console.log('Stooq返回数据长度:', data.length);
           console.log('Stooq返回数据前200字符:', data.substring(0, 200));
@@ -113,6 +120,74 @@ function fetchFromStooq(symbol) {
     
     req.on('timeout', function() {
       console.error('获取Stooq数据超时');
+      req.destroy();
+      resolve(null);
+    });
+    
+    req.end();
+  });
+}
+
+function fetchChinaIndex(symbol) {
+  return new Promise(function(resolve, reject) {
+    console.log('正在从东方财富获取' + symbol + '数据...');
+    
+    // 指数的secid格式: 1.表示沪市, 0.表示深市
+    var secid = symbol;
+    var options = {
+      hostname: 'push2his.eastmoney.com',
+      path: '/api/qt/stock/kline/get?secid=' + secid + '&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&klt=101&fqt=0&beg=20200101&end=20260304&lmt=100000',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        'Accept': '*/*',
+        'Referer': 'https://quote.eastmoney.com/'
+      },
+      timeout: 30000
+    };
+    
+    var req = https.request(options, function(response) {
+      var chunks = [];
+      response.on('data', function(chunk) {
+        chunks.push(chunk);
+      });
+      response.on('end', function() {
+        try {
+          var buffer = Buffer.concat(chunks);
+          var data = JSON.parse(buffer.toString('utf-8'));
+          
+          console.log('东方财富返回数据:', JSON.stringify(data).substring(0, 200));
+          
+          if (data.data && data.data.klines) {
+            var klines = data.data.klines;
+            var prices = [];
+            var dates = [];
+            
+            for (var i = 0; i < klines.length; i++) {
+              var parts = klines[i].split(',');
+              dates.push(parts[0]);
+              prices.push(parseFloat(parts[1]));
+            }
+            
+            console.log('成功从东方财富获取' + symbol + '数据，共' + prices.length + '条记录');
+            resolve({ prices: prices, dates: dates });
+          } else {
+            console.log('东方财富数据为空');
+            resolve(null);
+          }
+        } catch (error) {
+          console.error('解析东方财富数据失败:', error.message);
+          resolve(null);
+        }
+      });
+    });
+    
+    req.on('error', function(error) {
+      console.error('获取东方财富数据失败:', error.message);
+      resolve(null);
+    });
+    
+    req.on('timeout', function() {
+      console.error('获取东方财富数据超时');
       req.destroy();
       resolve(null);
     });
@@ -219,35 +294,86 @@ function getDataByYears(data, years) {
 
 function updateData() {
   console.log('[' + new Date().toLocaleString() + '] 正在更新指数数据...');
+  dataLoadError = null;
 
-  Promise.all([
-    fetchFromStooq('^ndx'),
-    fetchFromStooq('^spx')
-  ]).then(function(results) {
-    var ndxData = results[0];
-    var spxData = results[1];
-    
+  // 串行获取数据，避免同时请求导致超时
+  fetchFromStooq('^ndx').then(function(ndxData) {
     if (!ndxData || ndxData.prices.length === 0) {
-      console.log('纳斯达克100获取失败，使用模拟数据');
-      ndxData = generateRealisticData(18500, 0.015, 7300);
+      console.log('纳斯达克100获取失败');
+      dataLoadError = '纳斯达克100指数数据获取失败';
+      allData = { prices: [], dates: [] };
+    } else {
+      allData = ndxData;
     }
     
+    // 延迟2秒后获取红利低波数据，避免服务器限制
+    return new Promise(function(resolve) {
+      setTimeout(function() {
+        // 从东方财富获取红利低波ETF (512890 是红利低波ETF)
+        fetchChinaIndex('1.512890').then(function(result) {
+          if (result && result.prices.length > 0) {
+            resolve(result);
+          } else {
+            // 再尝试深市ETF (0.512890)
+            fetchChinaIndex('0.512890').then(function(result2) {
+              if (result2 && result2.prices.length > 0) {
+                resolve(result2);
+              } else {
+                // 再尝试中证红利低波指数 (1.000931)
+                fetchChinaIndex('1.000931').then(function(result3) {
+                  resolve(result3);
+                });
+              }
+            });
+          }
+        });
+      }, 2000);
+    });
+  }).then(function(h30269Result) {
+    if (!h30269Result || h30269Result.prices.length === 0) {
+      console.log('红利低波获取失败');
+      // 不设置全局错误，允许其他指数正常显示
+      h30269Data = { prices: [], dates: [] };
+    } else {
+      h30269Data = h30269Result;
+    }
+    
+    // 延迟2秒后获取标普500数据，避免服务器限制
+    return new Promise(function(resolve) {
+      setTimeout(function() {
+        resolve(fetchFromStooq('^spx'));
+      }, 2000);
+    });
+  }).then(function(spxData) {
     if (!spxData || spxData.prices.length === 0) {
-      console.log('标普500获取失败，使用模拟数据');
-      spxData = generateRealisticData(4200, 0.012, 7300);
+      console.log('标普500获取失败');
+      if (dataLoadError) {
+        dataLoadError = '纳斯达克100、红利低波和标普500指数数据获取失败';
+      } else {
+        dataLoadError = '标普500指数数据获取失败';
+      }
+      sp500Data = { prices: [], dates: [] };
+    } else {
+      sp500Data = spxData;
     }
     
-    allData = ndxData;
-    sp500Data = spxData;
     lastUpdate = new Date();
-    console.log('数据更新完成！纳斯达克100共' + allData.prices.length + '条记录，标普500共' + sp500Data.prices.length + '条记录');
+    isDataReady = true;
+    
+    if (dataLoadError) {
+      console.log('数据获取失败: ' + dataLoadError);
+    } else {
+      console.log('数据更新完成！纳斯达克100共' + allData.prices.length + '条记录，红利低波共' + h30269Data.prices.length + '条记录，标普500共' + sp500Data.prices.length + '条记录');
+    }
   }).catch(function(error) {
     console.error('更新数据失败:', error);
-    
-    allData = generateRealisticData(18500, 0.015, 7300);
-    sp500Data = generateRealisticData(4200, 0.012, 7300);
+    dataLoadError = '数据获取过程中发生错误: ' + error.message;
+    allData = { prices: [], dates: [] };
+    h30269Data = { prices: [], dates: [] };
+    sp500Data = { prices: [], dates: [] };
     lastUpdate = new Date();
-    console.log('数据更新完成（使用模拟数据）！');
+    isDataReady = true;
+    console.log('数据获取失败: ' + dataLoadError);
   });
 }
 
@@ -283,9 +409,27 @@ setInterval(function() {
 app.use(express.static(path.join(__dirname)));
 
 app.get('/api/indexes', function(req, res) {
+  // 检查数据是否已准备好
+  if (!isDataReady) {
+    res.status(503).json({
+      status: 'error',
+      message: '数据正在加载中，请稍后再试'
+    });
+    return;
+  }
+
+  // 检查是否有数据加载错误
+  if (dataLoadError) {
+    res.status(503).json({
+      status: 'error',
+      message: dataLoadError
+    });
+    return;
+  }
+
   var years = parseInt(req.query.years) || 1;
   var symbol = req.query.symbol || 'ndx';
-  
+
   // 对比模式：同时返回两个指数的数据
   if (symbol === 'compare') {
     var ndxData = getDataByYears(allData, years);
@@ -356,6 +500,9 @@ app.get('/api/indexes', function(req, res) {
   if (symbol === 'spx') {
     data = getDataByYears(sp500Data, years);
     name = '标普500指数';
+  } else if (symbol === 'h30269') {
+    data = getDataByYears(h30269Data, years);
+    name = '红利低波(512890)';
   } else {
     data = getDataByYears(allData, years);
     name = '纳斯达克100指数';
