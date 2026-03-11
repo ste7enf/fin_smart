@@ -347,11 +347,7 @@ function updateData() {
   }).then(function(spxData) {
     if (!spxData || spxData.prices.length === 0) {
       console.log('标普500获取失败');
-      if (dataLoadError) {
-        dataLoadError = '纳斯达克100、红利低波和标普500指数数据获取失败';
-      } else {
-        dataLoadError = '标普500指数数据获取失败';
-      }
+      // 标普500失败不影响其他指数，不设置全局错误
       sp500Data = { prices: [], dates: [] };
     } else {
       sp500Data = spxData;
