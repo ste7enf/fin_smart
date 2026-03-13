@@ -178,7 +178,20 @@ function main() {
       var currentPrice = data.data[data.data.length - 1];
       var trendIcon = getTrendIcon(dailyChange.change);
 
+      // 获取最新股票数据日期
+      var latestDate = data.dates[data.dates.length - 1];
+
       var content = [
+        {
+          tag: 'div',
+          text: {
+            tag: 'lark_md',
+            content: '📅 **股票数据日期: ' + formatDate(latestDate) + '**'
+          }
+        },
+        {
+          tag: 'hr'
+        },
         {
           tag: 'div',
           text: {
@@ -221,7 +234,7 @@ function main() {
           tag: 'div',
           text: {
             tag: 'lark_md',
-            content: '📅 **回撤形成天数: ' + data.formation_days + ' 天**'
+            content: '📆 **回撤形成天数: ' + data.formation_days + ' 天**'
           }
         },
         {
@@ -231,7 +244,7 @@ function main() {
           tag: 'div',
           text: {
             tag: 'lark_md',
-            content: '🕐 数据更新时间: ' + new Date().toLocaleString()
+            content: '🕐 推送时间: ' + new Date().toLocaleString()
           }
         }
       ];
